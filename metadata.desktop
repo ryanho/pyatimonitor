@@ -1,0 +1,18 @@
+[Desktop Entry]
+Encoding=UTF-8
+Icon=utilities-system-monitor
+Name=pyATImonitor
+Comment=using Python and aticonfig to monitor graphics card status
+ServiceTypes=Plasma/Applet
+Type=Service
+X-KDE-PluginInfo-Author=Ryan Ho
+X-KDE-PluginInfo-Category=System Information
+X-KDE-PluginInfo-Depends=
+X-KDE-PluginInfo-Email=koungho@gmail.com
+X-KDE-PluginInfo-EnabledByDefault=true
+X-KDE-PluginInfo-License=GPL
+X-KDE-PluginInfo-Name=pyATImon
+X-KDE-PluginInfo-Version=0.9
+X-KDE-PluginInfo-Website=http://www.kde-look.org
+X-Plasma-API=python
+X-Plasma-MainScript=code/main.py
