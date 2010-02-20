@@ -39,10 +39,10 @@ class ATImon(plasmascript.Applet):
  
         self.theme = Plasma.Svg(self)
         self.theme.setImagePath("widgets/background")
-        #self.setBackgroundHints(Plasma.Applet.DefaultBackground)
+        self.setBackgroundHints(Plasma.Applet.DefaultBackground)
         #self.setBackgroundHints(Plasma.Applet.NoBackground)
         #self.setBackgroundHints(Plasma.Applet.StandardBackground)
-        self.setBackgroundHints(Plasma.Applet.TranslucentBackground)
+        #self.setBackgroundHints(Plasma.Applet.TranslucentBackground)
         #self.icon = Plasma.IconWidget()
         
         result = self.getresult()
