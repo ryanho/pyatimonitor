@@ -48,6 +48,9 @@ class ATImon(plasmascript.Applet):
         result = self.getresult()
  
         self.layout = QGraphicsLinearLayout(Qt.Vertical, self.applet)
+        self.cardname = Plasma.Label(self.applet)
+        self.cardname.setText(result[6])
+        #self.cardname.setAlignment()
         self.meter1 = Plasma.Meter(self.applet)
         self.meter1.setMeterType(Plasma.Meter.BarMeterHorizontal)
         self.meter1.setLabel(0,'GPU load')
@@ -78,6 +81,7 @@ class ATImon(plasmascript.Applet):
         self.meter4.setLabelFont(0,QFont('Sans',8))
         self.meter4.setMaximum(int(result[5]))
         self.meter4.setValue(int(result[1]))
+        self.layout.addItem(self.cardname)
         self.layout.addItem(self.meter3)
         self.layout.addItem(self.meter4)
         self.layout.addItem(self.meter1)
@@ -87,23 +91,6 @@ class ATImon(plasmascript.Applet):
         timer = QTimer(self)
         self.connect(timer, SIGNAL("timeout()"), self.updateTime)
         timer.start(2000) # update every 2 seconds
-        
-        self.Dialog = PopupDialog()
-        self.Dialog.init()
-        self.Dialog.setBody(result[6])
-        self.dialogTimer = QTimer()
-        self.connect(self, SIGNAL("timeout()"), self.showDialog)
-        
-    def hoverEnterEvent(self, event):
-        self.dialogTimer.start(1000)  
-    
-    def showDialog(self):
-        self.Dialog.move(self.popupPosition(self.Dialog.sizeHint()))
-        self.Dialog.showDialog()
-    
-    def hoverLeaveEvent(self, event):
-        self.dialogTimer.stop()
-        self.Dialog.hide()
         
     def getresult(self):
         # run aticonfig and get result from PIPE
@@ -138,35 +125,6 @@ class ATImon(plasmascript.Applet):
         self.meter3.setValue(int(result[0]))
         self.meter4.setLabel(1,result[1] + 'MHz')
         self.meter4.setValue(int(result[1]))
-        
-class PopupDialog(Plasma.Dialog):
-    def init(self):
-        self.setAttribute(Qt.WA_TranslucentBackground)
-        self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.X11BypassWindowManagerHint)
-        
-        layout = QVBoxLayout(self)
-        self.title = QLabel()
-        self.title.setAlignment(Qt.AlignCenter)
-        layout.addWidget(self.title)
-        self.body = QLabel()
-        layout.addWidget(self.body)
-        
-        self.setLayout(layout)
-        
-    def setTitle(self, s):
-        if s == "":
-            self.title.setText("")
-        else:
-            self.title.setText("<b>"+s+"</b>")
-        
-    def setBody(self, s):
-        self.body.setText(s)
-        
-    def showDialog(self):
-        if self.title.text() == "" and self.body.text() == "":
-           pass
-        else:
-            self.show()
  
 def CreateApplet(parent):
     return ATImon(parent)
