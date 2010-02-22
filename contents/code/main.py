@@ -26,7 +26,6 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from PyKDE4.plasma import Plasma
 from PyKDE4 import plasmascript
-#from PyKDE4.kdecore import *
 
 class ATImon(plasmascript.Applet):
     def __init__(self,parent,args=None):
@@ -39,17 +38,26 @@ class ATImon(plasmascript.Applet):
         theme = Plasma.Theme.defaultTheme()
         t_textcolor = theme.color(Plasma.Theme.TextColor)
         
-        #load Kconfig
-        #cg = KConfigGroup.config()
-        #d_refreshtime = cg.readEntry("refreshtime", 2)
+        #load config
+        cg = self.config()
+        d_refreshtime = cg.readEntry("refreshtime", 2).toInt()
+        d_bgStyle = cg.readEntry("bgStyle", 1)
+        self.d_tempUnit = cg.readEntry("tempUnit", 2)
         
         #self.resize(300, 200)
         self.setHasConfigurationInterface(False)
         self.setAspectRatioMode(Plasma.IgnoreAspectRatio)
- 
+        
         self.theme = Plasma.Svg(self)
         self.theme.setImagePath("widgets/background")
-        self.setBackgroundHints(Plasma.Applet.DefaultBackground)
+        if d_bgStyle == 0:
+            self.setBackgroundHints(Plasma.Applet.NoBackground)
+        elif d_bgStyle == 1:
+            self.setBackgroundHints(Plasma.Applet.StandardBackground)
+        elif d_bgStyle == 2:
+            self.setBackgroundHints(Plasma.Applet.TranslucentBackground)
+        else:
+            self.setBackgroundHints(Plasma.Applet.StandardBackground)
         #self.setBackgroundHints(Plasma.Applet.NoBackground)
         #self.setBackgroundHints(Plasma.Applet.StandardBackground)
         #self.setBackgroundHints(Plasma.Applet.TranslucentBackground)
@@ -61,7 +69,6 @@ class ATImon(plasmascript.Applet):
         self.cardname = Plasma.Label(self.applet)
         self.cardname.setText(result[6])
         self.cardname.setAlignment(Qt.AlignHCenter)
-        #self.cardname.setAlignment()
         self.meter1 = Plasma.Meter(self.applet)
         self.meter1.setMeterType(Plasma.Meter.BarMeterHorizontal)
         self.meter1.setLabel(0,'GPU load')
@@ -73,13 +80,19 @@ class ATImon(plasmascript.Applet):
         self.meter1.setValue(int(result[2]))
         self.meter2 = Plasma.Meter(self.applet)
         self.meter2.setMeterType(Plasma.Meter.BarMeterHorizontal)
-        self.meter2.setLabel(1,result[3] + u'℃')
+        if self.d_tempUnit == 1:
+            tempUnit = u'℃'
+            self.meter2.setLabel(1,result[3] + tempUnit)
+            self.meter2.setMaximum(110)
+        elif self.d_tempUnit == 2:
+            tempUnit = u'℉'
+            self.meter2.setLabel(1,self.c2f(result[3]) + tempUnit)
+            self.meter2.setMaximum(230)
         self.meter2.setLabel(0,'GPU temp.')
         self.meter2.setLabelFont(0, QFont('Sans',8))
         self.meter2.setLabelColor(0, t_textcolor)
         self.meter2.setMinimum(0)
-        self.meter2.setMaximum(110)
-        self.meter2.setValue(int(result[3]))
+        self.meter2.setValue(float(result[3]))
         self.meter3 = Plasma.Meter(self.applet)
         self.meter3.setMeterType(Plasma.Meter.BarMeterHorizontal)
         self.meter3.setLabel(1, result[0] + 'MHz')
@@ -105,7 +118,7 @@ class ATImon(plasmascript.Applet):
         
         timer = QTimer(self)
         self.connect(timer, SIGNAL("timeout()"), self.updateTime)
-        timer.start(2000) # update every 2 seconds
+        timer.start(d_refreshtime[0] * 1000) # update every x seconds
         
     def getresult(self):
         # run aticonfig and get result from PIPE
@@ -127,15 +140,20 @@ class ATImon(plasmascript.Applet):
                 gl = gl[3] # gpu load
             if re.search(r' *Sensor', i):
                 gt = i.strip().split()
-                gt = ('%.0f' % float(gt[4])) # gpu temperature
+                gt = gt[4] # gpu temperature
         return ccc, ccr, gl, gt, cpc, cpr, dar
     
     def updateTime(self):
         result = self.getresult()
         self.meter1.setLabel(1, result[2] + '%')
         self.meter1.setValue(int(result[2]))
-        self.meter2.setLabel(1,result[3] + u'℃')
-        self.meter2.setValue(int(result[3]))
+        if self.d_tempUnit == 1:
+            tempUnit = u'℃'
+            self.meter2.setLabel(1,result[3] + tempUnit)
+        elif self.d_tempUnit == 2:
+            tempUnit = u'℉'
+            self.meter2.setLabel(1,self.c2f(result[3]) + tempUnit)
+        self.meter2.setValue(float(result[3]))
         self.meter3.setLabel(1,result[0] + 'MHz')
         self.meter3.setValue(int(result[0]))
         self.meter4.setLabel(1,result[1] + 'MHz')
@@ -148,6 +166,11 @@ class ATImon(plasmascript.Applet):
         self.meter2.setLabelColor(0, t_textcolor)
         self.meter3.setLabelColor(0, t_textcolor)
         self.meter4.setLabelColor(0, t_textcolor)
+        
+    def c2f(self, degree):
+        #convert Celsius to Fahrenheit
+        degree = float(degree) * 9 / 5 + 32
+        return str(degree)
  
 def CreateApplet(parent):
     return ATImon(parent)
