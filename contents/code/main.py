@@ -21,7 +21,7 @@
 """
 
 from subprocess import Popen, PIPE
-import re
+import re, random
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from PyKDE4.plasma import Plasma
@@ -64,13 +64,12 @@ class ATImon(plasmascript.Applet):
         result = self.getresult()
  
         self.layout = QGraphicsLinearLayout(Qt.Vertical, self.applet)
-        self.cardname = Plasma.Label(self.applet)
+        self.cardname = Plasma.Frame(self.applet)
         self.cardname.setText(result[6])
-        self.cardname.setAlignment(Qt.AlignHCenter)
 
         #some kind bug in QColor.setAlpha(), need a workaround.
         plotcolor = t_textcolor.getRgb()
-        plotcolor = QColor(plotcolor[0], plotcolor[1], plotcolor[2], 125)
+        plotcolor = QColor(plotcolor[0], plotcolor[1], plotcolor[2], 220)
         
         self.chart1 = Plasma.SignalPlotter(self.applet)
         self.chart1.setTitle('GPU Load')
@@ -81,14 +80,14 @@ class ATImon(plasmascript.Applet):
         self.chart1.setFontColor(t_textcolor)
         self.chart1.setFont(QFont('Sans',8))
         self.chart1.setShowLabels(0)
-        self.chart1.setThinFrame(1)
+        self.chart1.setThinFrame(0)
         self.chart1.setUnit('%')
         self.chart1.addPlot(plotcolor)
         self.chart1.setSvgBackground('widgets/plot-background')
         load = (int(result[2]))
         samples = [load,]
         self.chart1.addSample(samples)
-        self.valueLabel1 = Plasma.Label(self.chart1)
+        self.valueLabel1 = Plasma.Frame(self.chart1)
         self.valueLabel1.setFont(QFont('Sans',8))
         self.chart1.setLayout(self.valueLabelLayout(self.valueLabel1))
         self.valueLabel1.setText(result[2] + '%')
@@ -102,14 +101,14 @@ class ATImon(plasmascript.Applet):
         self.chart2.setFontColor(t_textcolor)
         self.chart2.setFont(QFont('Sans',8))
         self.chart2.setShowLabels(0)
-        self.chart2.setThinFrame(1)
+        self.chart2.setThinFrame(0)
         self.chart2.setUnit("C")
         self.chart2.addPlot(plotcolor)
         self.chart2.setSvgBackground('widgets/plot-background')
         temp = (float(result[3]))
         samples = [temp,]
         self.chart2.addSample(samples)
-        self.valueLabel2 = Plasma.Label(self.chart2)
+        self.valueLabel2 = Plasma.Frame(self.chart2)
         self.valueLabel2.setFont(QFont('Sans',8))
         self.chart2.setLayout(self.valueLabelLayout(self.valueLabel2))
         self.valueLabel2.setText(result[3] + u'℃')
@@ -123,14 +122,14 @@ class ATImon(plasmascript.Applet):
         self.chart3.setFontColor(t_textcolor)
         self.chart3.setFont(QFont('Sans',8))
         self.chart3.setShowLabels(0)
-        self.chart3.setThinFrame(1)
+        self.chart3.setThinFrame(0)
         self.chart3.setUnit("MHz")
         self.chart3.addPlot(plotcolor)
         self.chart3.setSvgBackground('widgets/plot-background')
         corecl = (int(result[0]))
         samples = [corecl,]
         self.chart3.addSample(samples)
-        self.valueLabel3 = Plasma.Label(self.chart3)
+        self.valueLabel3 = Plasma.Frame(self.chart3)
         self.valueLabel3.setFont(QFont('Sans',8))
         self.chart3.setLayout(self.valueLabelLayout(self.valueLabel3))
         self.valueLabel3.setText(result[0] + 'MHz')
@@ -144,14 +143,14 @@ class ATImon(plasmascript.Applet):
         self.chart4.setFontColor(t_textcolor)
         self.chart4.setFont(QFont('Sans',8))
         self.chart4.setShowLabels(0)
-        self.chart4.setThinFrame(1)
+        self.chart4.setThinFrame(0)
         self.chart4.setUnit("MHz")
         self.chart4.addPlot(plotcolor)
         self.chart4.setSvgBackground('widgets/plot-background')
         memcl = (result[1])
         samples = [memcl,]
         self.chart4.addSample(samples)
-        self.valueLabel4 = Plasma.Label(self.chart4)
+        self.valueLabel4 = Plasma.Frame(self.chart4)
         self.valueLabel4.setFont(QFont('Sans',8))
         self.chart4.setLayout(self.valueLabelLayout(self.valueLabel4))
         self.valueLabel4.setText(result[1] + 'MHz')
@@ -168,27 +167,38 @@ class ATImon(plasmascript.Applet):
         timer.start(d_refreshtime[0] * 1000) # update every x seconds
         
     def getresult(self):
+        try:
         # run aticonfig and get result from PIPE
-        result = Popen(['aticonfig','--odgc','--odgt'], stdin=PIPE, stdout=PIPE, stderr=PIPE).stdout.read().split('\n')
-        for i in result:
-            if re.search(r'Default Adapter', i):
-                da = i.split(' - ')
-                dar = da[1] # default adapter name
-            if re.search(r' *Current Clocks', i):
-                cc = i.strip().split()
-                ccc = cc[3] # current clock of core
-                ccr = cc[4] # current clock of memory
-            if re.search(r' Current Peak', i):
-                cp = i.strip().split()
-                cpc = cp[3] # current peak of core
-                cpr = cp[4] # current peak of memory
-            if re.search(r' *GPU load', i):
-                gl = i.replace('%','').strip().split()
-                gl = gl[3] # gpu load
-            if re.search(r' *Sensor', i):
-                gt = i.strip().split()
-                gt = ('%.1f' % float(gt[4])) # gpu temperature
-        return ccc, ccr, gl, gt, cpc, cpr, dar
+            result = Popen(['aticonfig','--odgc','--odgt'], stdin=PIPE, stdout=PIPE, stderr=PIPE).stdout.read().split('\n')
+            for i in result:
+                if re.search(r'Default Adapter', i):
+                    da = i.split(' - ')
+                    dar = da[1] # default adapter name
+                if re.search(r' *Current Clocks', i):
+                    cc = i.strip().split()
+                    ccc = cc[3] # current clock of core
+                    ccr = cc[4] # current clock of memory
+                if re.search(r' Current Peak', i):
+                    cp = i.strip().split()
+                    cpc = cp[3] # current peak of core
+                    cpr = cp[4] # current peak of memory
+                if re.search(r' *GPU load', i):
+                    gl = i.replace('%','').strip().split()
+                    gl = gl[3] # gpu load
+                if re.search(r' *Sensor', i):
+                    gt = i.strip().split()
+                    gt = ('%.1f' % float(gt[4])) # gpu temperature
+            return ccc, ccr, gl, gt, cpc, cpr, dar
+        except OSError:
+            #fake data source for developing
+            dar = 'Developing Mode'
+            ccc = str(random.randrange(500,700,50))
+            ccr = '993'
+            cpc = '700'
+            cpr = '993'
+            gl = str(random.randint(0,100))
+            gt = '%.1f' % random.uniform(30,70)
+            return ccc, ccr, gl, gt, cpc, cpr, dar
     
     def updateTime(self):
         result = self.getresult()
