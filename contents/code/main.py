@@ -44,6 +44,12 @@ class ATImon(plasmascript.Applet):
         d_refreshtime = cg.readEntry("refreshtime", 2).toInt()
         d_bgStyle = cg.readEntry("bgStyle", 1)
         self.d_tempUnit = cg.readEntry("tempUnit", 1)
+        if self.d_tempUnit == 0:
+            self.tempunit = u'℃'
+        elif self.d_tempUnit == 1:
+            self.tempunit = 'F'
+        else:
+            self.tempunit = u'℃'
         
         self.setHasConfigurationInterface(False)
         self.setAspectRatioMode(Plasma.IgnoreAspectRatio)
@@ -102,7 +108,7 @@ class ATImon(plasmascript.Applet):
         self.chart2.setFont(QFont('Sans',8))
         self.chart2.setShowLabels(0)
         self.chart2.setThinFrame(0)
-        self.chart2.setUnit("C")
+        self.chart2.setUnit(self.tempunit)
         self.chart2.addPlot(plotcolor)
         self.chart2.setSvgBackground('widgets/plot-background')
         temp = (float(result[3]))
@@ -111,7 +117,7 @@ class ATImon(plasmascript.Applet):
         self.valueLabel2 = Plasma.Frame(self.chart2)
         self.valueLabel2.setFont(QFont('Sans',8))
         self.chart2.setLayout(self.valueLabelLayout(self.valueLabel2))
-        self.valueLabel2.setText(result[3] + u'℃')
+        self.valueLabel2.setText(result[3] + self.tempunit)
         
         self.chart3 = Plasma.SignalPlotter(self.applet)
         self.chart3.setTitle("Core Clock")
@@ -210,7 +216,7 @@ class ATImon(plasmascript.Applet):
         temp = (float(result[3]))
         samples = [temp,]
         self.chart2.addSample(samples)
-        self.valueLabel2.setText(result[3] + u'℃')
+        self.valueLabel2.setText(result[3] + self.tempunit)
 
         corecl = (int(result[0]))
         samples = [corecl,]
