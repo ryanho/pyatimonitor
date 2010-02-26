@@ -43,13 +43,7 @@ class ATImon(plasmascript.Applet):
         cg = self.config()
         d_refreshtime = cg.readEntry("refreshtime", 2).toInt()
         d_bgStyle = cg.readEntry("bgStyle", 1)
-        self.d_tempUnit = cg.readEntry("tempUnit", 1)
-        if self.d_tempUnit == 0:
-            self.tempunit = u'℃'
-        elif self.d_tempUnit == 1:
-            self.tempunit = 'F'
-        else:
-            self.tempunit = u'℃'
+        self.d_tempUnit = cg.readEntry("tempUnit", 0)
         
         self.setHasConfigurationInterface(False)
         self.setAspectRatioMode(Plasma.IgnoreAspectRatio)
@@ -100,8 +94,17 @@ class ATImon(plasmascript.Applet):
         
         self.chart2 = Plasma.SignalPlotter(self.applet)
         self.chart2.setTitle('GPU Temp')
+        if self.d_tempUnit == 0:
+            self.tempunit = u'℃'
+            self.chart2.setVerticalRange(0, 110)
+            degree = result[3]
+        elif self.d_tempUnit == 1:
+            self.tempunit = 'F'
+            self.chart2.setVerticalRange(0, 230)
+            degree = self.c2f(result[3])
+        else:
+            self.tempunit = u'℃'
         self.chart2.setUseAutoRange(0)
-        self.chart2.setVerticalRange(0, 110)
         self.chart2.setShowVerticalLines(0)
         self.chart2.setShowHorizontalLines(0)
         self.chart2.setFontColor(t_textcolor)
@@ -111,13 +114,13 @@ class ATImon(plasmascript.Applet):
         self.chart2.setUnit(self.tempunit)
         self.chart2.addPlot(plotcolor)
         self.chart2.setSvgBackground('widgets/plot-background')
-        temp = (float(result[3]))
+        temp = (float(degree))
         samples = [temp,]
         self.chart2.addSample(samples)
         self.valueLabel2 = Plasma.Frame(self.chart2)
         self.valueLabel2.setFont(QFont('Sans',8))
         self.chart2.setLayout(self.valueLabelLayout(self.valueLabel2))
-        self.valueLabel2.setText(result[3] + self.tempunit)
+        self.valueLabel2.setText(degree + self.tempunit)
         
         self.chart3 = Plasma.SignalPlotter(self.applet)
         self.chart3.setTitle("Core Clock")
@@ -153,7 +156,7 @@ class ATImon(plasmascript.Applet):
         self.chart4.setUnit("MHz")
         self.chart4.addPlot(plotcolor)
         self.chart4.setSvgBackground('widgets/plot-background')
-        memcl = (result[1])
+        memcl = (int(result[1]))
         samples = [memcl,]
         self.chart4.addSample(samples)
         self.valueLabel4 = Plasma.Frame(self.chart4)
@@ -216,7 +219,11 @@ class ATImon(plasmascript.Applet):
         temp = (float(result[3]))
         samples = [temp,]
         self.chart2.addSample(samples)
-        self.valueLabel2.setText(result[3] + self.tempunit)
+        if self.d_tempUnit == 1:
+            degree = self.c2f(result[3])
+            self.valueLabel2.setText(degree + self.tempunit)
+        else:
+            self.valueLabel2.setText(result[3] + self.tempunit)
 
         corecl = (int(result[0]))
         samples = [corecl,]
